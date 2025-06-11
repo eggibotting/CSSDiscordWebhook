@@ -46,6 +46,7 @@ public class DiscordWebhook
         catch (Exception ex)
         {
             Instance.Logger.LogError($"Error sending message to Discord: {ex.Message}");
+            throw;
         }
     }
 }

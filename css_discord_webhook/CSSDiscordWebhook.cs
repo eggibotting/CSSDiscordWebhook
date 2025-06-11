@@ -14,13 +14,9 @@ public class CSSDiscordWebhook : BasePlugin, IPluginConfig<DiscordConfig>
     public required DiscordConfig Config { get; set; }
 
     private DiscordWebhook? _discordWebhook = null;
-    public required CSSDiscordWebhook Instance;
     private Dictionary<int, int> _teamScores = [];
 
-    public override void Load(bool hotReload)
-    {
-        Instance = this;
-    }
+    public override void Load(bool hotReload) { }
 
     [GameEventHandler]
     public HookResult OnTeamScore(EventTeamScore score, GameEventInfo info)
@@ -66,24 +62,18 @@ public class CSSDiscordWebhook : BasePlugin, IPluginConfig<DiscordConfig>
             return;
         }
 
-        if (_discordWebhook == null)
-        {
-            command.ReplyToCommand("Discord webhook hasn't been initialized. Contact Admin directly.");
-            return;
-        }
-
-        var message = $"Admin call by {player.PlayerName} (SteamID: {player.SteamID}): {command.ArgByIndex(1) ?? "No message provided."}";
+        var callMessage = command.ArgString;
+        var message = $"Admin call by {player.PlayerName} (SteamID: {player.SteamID}): {(string.IsNullOrWhiteSpace(callMessage) ? "No message provided." : callMessage)}";
+        command.ReplyToCommand("Message sent to Admin.");
         Server.NextFrame(async () =>
         {
             try
             {
                 await _discordWebhook.SendMessageAsync(message);
-                command.ReplyToCommand("Admin call sent to Discord.");
             }
             catch (Exception ex)
             {
                 Logger.LogError($"Error sending Discord message: {ex.Message}");
-                command.ReplyToCommand("Failed to send admin call to Discord. Check server logs for details.");
                 return;
             }
         });
