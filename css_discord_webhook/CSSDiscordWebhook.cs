@@ -66,10 +66,26 @@ public class CSSDiscordWebhook : BasePlugin, IPluginConfig<DiscordConfig>
             return;
         }
 
-        var message = $"Admin call by {player.PlayerName} (SteamID: {player.SteamID}): {command.ArgByIndex(1) ?? "No message provided."}";
-        Server.NextFrame(() =>
+        if (_discordWebhook == null)
         {
-            _ = _discordWebhook.SendMessageAsync(message);
+            command.ReplyToCommand("Discord webhook hasn't been initialized. Contact Admin directly.");
+            return;
+        }
+
+        var message = $"Admin call by {player.PlayerName} (SteamID: {player.SteamID}): {command.ArgByIndex(1) ?? "No message provided."}";
+        Server.NextFrame(async () =>
+        {
+            try
+            {
+                await _discordWebhook.SendMessageAsync(message);
+                command.ReplyToCommand("Admin call sent to Discord.");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError($"Error sending Discord message: {ex.Message}");
+                command.ReplyToCommand("Failed to send admin call to Discord. Check server logs for details.");
+                return;
+            }
         });
     }
 
@@ -86,7 +102,7 @@ public class CSSDiscordWebhook : BasePlugin, IPluginConfig<DiscordConfig>
         _discordWebhook = new()
         {
             WebhookUrl = new Uri(config.WebhookUrl),
-            InstanceName = config.InstanceName
+            Instance = this
         };
     }
 }
