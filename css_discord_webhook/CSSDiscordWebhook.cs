@@ -228,10 +228,7 @@ public class CSSDiscordWebhook(
 
     private MatchMock GetMatchMock()
     {
-        MatchMock mock = new()
-        {
-            MapName = Server.MapName,
-        };
+        MatchMock mock = new();
 
         foreach (var entity in GetAllEntities())
         {
@@ -257,11 +254,17 @@ public class CSSDiscordWebhook(
         return mock;
     }
 
+    /// <summary>
+    /// Used to provide Timers in other classes without creating circular injection problems.
+    /// <para />
+    /// Provides the default <see cref="BasePlugin.Timer"/> implementation.
+    /// </summary>
     public void AddTimer(float interval, Action callback)
     {
         base.AddTimer(interval, callback);
     }
 
+    /// <returns>Tuple[TeamName1, TeamName2]</returns>
     private Tuple<string, string> GetTeamNames(MatchMock? providedMock = null)
     {
         var mock = providedMock ?? GetMatchMock();
