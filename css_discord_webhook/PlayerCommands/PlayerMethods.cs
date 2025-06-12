@@ -1,18 +1,13 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using css_discord_webhook.Discord;
-using Microsoft.Extensions.DependencyInjection;
-using static CounterStrikeSharp.API.Utilities;
-using System.Threading.Tasks;
 using css_discord_webhook.Util;
 
 namespace css_discord_webhook.Player;
 
 public class PlayerMethods(DiscordWebhook discordWebhook)
 {
-
     private readonly Dictionary<CsTeam, HashSet<CCSPlayerController>> playerReadyStatus = new()
     {
         {CsTeam.Terrorist, []},
@@ -21,6 +16,7 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
     private CsTeam? pausedTeam = null;
     public GameState GameState { get; set; } = GameState.Warmup;
     private readonly DiscordWebhook _discord = discordWebhook;
+    public ITimerService? Timer { get; set; }
 
     public void ReadyPlayer(CCSPlayerController player)
     {
@@ -92,12 +88,32 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
 
     private void StartGame()
     {
-        Server.PrintToChatAll("Called Start Game Method");
+        Countdown(3, ExecGameStart);
+    }
+
+    private void Countdown(int secondsRemaining, Action callback)
+    {
+        if (secondsRemaining > 0)
+        {
+            Server.PrintToChatAll($"Game starts in {secondsRemaining}...");
+            Timer!.AddTimer(1, () => Countdown(secondsRemaining - 1, callback));
+        }
+        else
+        {
+            callback.Invoke();
+        }
     }
 
     private void ExecGameStart()
     {
         GameState = GameState.Live;
-        Server.PrintToChatAll("Starting");
+        Server.PrintToChatAll("GameLive - GL HF!!!");
+        // Server.ExecuteCommand("exec ") // TODO: add proper GameLive Config
+    }
+
+    internal void ResetReadyStatus()
+    {
+        playerReadyStatus[CsTeam.Terrorist] = [];
+        playerReadyStatus[CsTeam.CounterTerrorist] = [];
     }
 }

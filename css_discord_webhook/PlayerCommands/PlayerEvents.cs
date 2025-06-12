@@ -1,6 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using css_discord_webhook.Util;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace css_discord_webhook.Player;
@@ -27,10 +28,46 @@ public class PlayerEvents(PlayerMethods playerMethods)
 
     [GameEventHandler]
     public HookResult OnPlayerTeamChange(EventPlayerTeam teamChange, GameEventInfo info)
-
     {
         _playerMethods.UnreadyPlayer(teamChange.Userid!);
         return HookResult.Continue;
     }
 
+    // TODO: Find trigger that works for manually started/ended warmups
+
+    /// <summary>
+    /// Triggers, when a match is starting (only after warmups, also after <c>mp_restartgame 1</c>)
+    /// </summary>
+    [GameEventHandler]
+    public HookResult OnGameRestart(EventBeginNewMatch roundStart, GameEventInfo info)
+    {
+        _playerMethods.GameState = GameState.Live;
+        _playerMethods.ResetReadyStatus();
+
+        return HookResult.Continue;
+    }
+
+    /// <summary>
+    /// Triggers, when warmup naturally ends (not after <c>mp_warmup_end</c>)
+    /// </summary>
+    [GameEventHandler]
+    public HookResult OnWarmupEnd(EventWarmupEnd warmupEnd, GameEventInfo info)
+    {
+        _playerMethods.GameState = GameState.Live;
+        _playerMethods.ResetReadyStatus();
+
+        return HookResult.Continue;
+    }
+
+    /// <summary>
+    /// Triggers, when warmup starts (not after <c>mp_warmup_start</c>)
+    /// </summary>
+    [GameEventHandler]
+    public HookResult OnWarmupStart(EventRoundAnnounceWarmup warmupEnd, GameEventInfo info)
+    {
+        _playerMethods.GameState = GameState.Warmup;
+        _playerMethods.ResetReadyStatus();
+
+        return HookResult.Continue;
+    }
 }

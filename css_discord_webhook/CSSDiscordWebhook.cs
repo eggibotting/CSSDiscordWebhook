@@ -27,21 +27,19 @@ public class WebhookServiceCollection : IPluginServiceCollection<CSSDiscordWebho
 public class CSSDiscordWebhook(
     DiscordWebhook discordWebhook,
     PlayerMethods playerMethods,
-    PlayerEvents playerEvents,
-    PlayerCommands playerCommands) : BasePlugin
+    PlayerCommands playerCommands) : BasePlugin, ITimerService
 {
     public override string ModuleName => "CSS Discord Webhook";
     public override string ModuleVersion => "v0.1.0";
 
     private readonly DiscordWebhook _discordWebhook = discordWebhook;
     private readonly PlayerMethods _playerMethods = playerMethods;
-    private readonly PlayerEvents _playerEvents = playerEvents;
     private readonly PlayerCommands _playerCommands = playerCommands;
     private GameState _gameState = GameState.Warmup;
 
     public override void Load(bool hotReload)
     {
-        // _discordWebhook.OnConfigParsed(ConfigManager.Load<DiscordConfig>("CSSDiscordWebhook"));
+        _playerMethods.Timer = this;
         var config = ConfigManager.Load<DiscordConfig>("CSSDiscordWebhook");
 
         Logger.LogInformation("Discord Webhook URL: {Url}", config.WebhookUrl);
@@ -78,28 +76,6 @@ public class CSSDiscordWebhook(
     }
 
     [GameEventHandler]
-    public HookResult OnWarmupEnd(EventWarmupEnd warmupEnd, GameEventInfo info)
-    {
-        _gameState = GameState.Live;
-        Server.PrintToChatAll("_gameState changed to Live.");
-        Server.PrintToChatAll("_gameState changed to Live.");
-        Server.PrintToChatAll("_gameState changed to Live.");
-
-        return HookResult.Continue;
-    }
-
-    [GameEventHandler]
-    public HookResult OnWarmupStart(EventRoundAnnounceWarmup warmupEnd, GameEventInfo info)
-    {
-        _gameState = GameState.Warmup;
-        Server.PrintToChatAll("_gameState changed to Warmup.");
-        Server.PrintToChatAll("_gameState changed to Warmup.");
-        Server.PrintToChatAll("_gameState changed to Warmup.");
-
-        return HookResult.Continue;
-    }
-
-    [GameEventHandler]
     public HookResult OnRoundEnd(EventRoundEnd roundEnd, GameEventInfo info)
     {
         if (_discordWebhook == null)
@@ -115,7 +91,6 @@ public class CSSDiscordWebhook(
         Server.PrintToChatAll("Message sent to Discord.");
         return HookResult.Continue;
     }
-
 
     [ConsoleCommand("test", "")]
     public void TestCommand(CCSPlayerController? player, CommandInfo command)
@@ -160,5 +135,10 @@ public class CSSDiscordWebhook(
         }
 
         return mock;
+    }
+
+    public void AddTimer(float interval, Action callback)
+    {
+        base.AddTimer(interval, callback);
     }
 }
