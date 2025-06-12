@@ -5,9 +5,9 @@ namespace css_discord_webhook.Discord;
 
 public class DiscordConfig : BasePluginConfig
 {
-    [JsonPropertyName("webhook_url")]
+    [JsonPropertyName("WebhookUrl")]
     public string WebhookUrl { get; set; } = string.Empty;
 
-    [JsonPropertyName("instance_name")]
+    [JsonPropertyName("InstanceName")]
     public string InstanceName { get; set; } = "base";
 }

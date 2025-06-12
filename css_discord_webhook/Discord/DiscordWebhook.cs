@@ -1,20 +1,36 @@
 
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace css_discord_webhook.Discord;
 
-public class DiscordWebhook
+public class DiscordWebhook(ILogger<DiscordWebhook> logger) : IPluginConfig<DiscordConfig>
 {
-    public required Uri WebhookUrl { get; set; }
     private readonly HttpClient _httpClient = new();
-    public required CSSDiscordWebhook Instance { get; set; }
+    public required DiscordConfig Config { get; set; }
+    private readonly ILogger<DiscordWebhook> _logger = logger;
 
-    public DiscordWebhook() { }
+    public void SendMessage(string message, int color = 0x00FF00)
+    {
+        Server.NextFrame(async () =>
+        {
+            try
+            {
+                await SendMessageAsync(message, color);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error sending Discord message: {ex.Message}");
+                return;
+            }
+        });
+    }
 
     public async Task SendMessageAsync(string message, int color = 0x00FF00)
     {
-        Instance.Logger.LogInformation($"Sending message to Discord: {message}");
+        _logger.LogInformation($"Sending message to Discord: {message}");
         var messageObj = new
         {
             content = "",
@@ -24,7 +40,7 @@ public class DiscordWebhook
                     new
                     {
                         type = "rich",
-                        title = $"Notification from {Instance.Config.InstanceName}",
+                        title = $"Notification from {Config.InstanceName}",
                         description = message,
                         color,
                     }
@@ -39,14 +55,31 @@ public class DiscordWebhook
 
         try
         {
-            var response = await _httpClient.PostAsync(WebhookUrl, json);
+            var response = await _httpClient.PostAsync(Config.WebhookUrl, json);
             response.EnsureSuccessStatusCode();
-            Instance.Logger.LogInformation("Message sent to Discord successfully.");
+            _logger.LogInformation("Message sent to Discord successfully.");
         }
         catch (Exception ex)
         {
-            Instance.Logger.LogError($"Error sending message to Discord: {ex.Message}");
+            _logger.LogError($"Error sending message to Discord: {ex.Message}");
             throw;
         }
+    }
+
+    public void OnConfigParsed(DiscordConfig config)
+    {
+        if (config == null)
+        {
+            _logger.LogError("DiscordConfig is null. Cannot parse configuration.");
+            return;
+        }
+        _logger.LogInformation("Config parsed for Discord webhook.");
+        if (string.IsNullOrWhiteSpace(config.WebhookUrl) || string.IsNullOrEmpty(config.InstanceName))
+        {
+            _logger.LogError("Discord Webhook Configuration is missing fields.");
+            return;
+        }
+
+        Config = config;
     }
 }
