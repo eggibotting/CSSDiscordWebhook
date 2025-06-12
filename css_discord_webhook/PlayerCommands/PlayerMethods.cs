@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using css_discord_webhook.Discord;
 using css_discord_webhook.Util;
+using static css_discord_webhook.Util.ChatColors;
 
 namespace css_discord_webhook.Player;
 
@@ -54,7 +55,7 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
         var mock = GetMatchMock();
         var teamName = mock.Team1?.TeamNum == (int)team ? mock.Team1.ClanTeamname : mock.Team2?.ClanTeamname;
 
-        Server.PrintToChatAll($"Game paused for team: {(string.IsNullOrWhiteSpace(teamName) ? team : teamName)}. Use !unpause to resume.");
+        Server.PrintToChatAll(red.ToColoredChat($"Game paused for team: {(string.IsNullOrWhiteSpace(teamName) ? team : teamName)}. Use !unpause to resume."));
 
         Server.ExecuteCommand("mp_pause_match");
     }
@@ -65,7 +66,7 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
 
         pausedTeam = null;
 
-        Server.PrintToChatAll("Game unpaused. Continuing match...");
+        Server.PrintToChatAll(green.ToColoredChat("Game unpaused. Continuing match..."));
 
         Server.ExecuteCommand("mp_unpause_match");
 
@@ -81,9 +82,9 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
 
     private void PrintPlayerReadyStatus()
     {
-        Server.PrintToChatAll(
+        Server.PrintToChatAll(blue.ToColoredChat(
             $"Ready CT: {playerReadyStatus[CsTeam.CounterTerrorist].Count}/5 | Ready T: {playerReadyStatus[CsTeam.Terrorist].Count}/5"
-        );
+        ));
     }
 
     private bool AllPlayersReady()
@@ -101,11 +102,13 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
     {
         if (secondsRemaining > 0)
         {
+            if (!AllPlayersReady()) return;
             Server.PrintToChatAll($"Game starts in {secondsRemaining}...");
             Timer!.AddTimer(1, () => Countdown(secondsRemaining - 1, callback));
         }
         else
         {
+            if (!AllPlayersReady()) return;
             callback.Invoke();
         }
     }
@@ -113,7 +116,7 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
     private void ExecGameStart()
     {
         GameState = GameState.Live;
-        Server.PrintToChatAll("GameLive - GL HF!!!");
+        Server.PrintToChatAll(green.ToColoredChat("GameLive - GL HF!!!"));
         // Server.ExecuteCommand("exec ") // TODO: add proper GameLive Config
     }
 
@@ -126,11 +129,7 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
 
     private MatchMock GetMatchMock()
     {
-        MatchMock mock = new()
-        {
-            MapName = Server.MapName,
-            GameState = GameState
-        };
+        MatchMock mock = new();
 
         foreach (var entity in GetAllEntities())
         {

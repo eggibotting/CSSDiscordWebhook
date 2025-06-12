@@ -4,8 +4,10 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using css_discord_webhook.Discord;
+using css_discord_webhook.Util;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using static css_discord_webhook.Util.ChatColors;
 
 namespace css_discord_webhook.Player;
 
@@ -69,7 +71,7 @@ public class PlayerCommands(PlayerMethods playerMethods, ILogger<PlayerCommands>
         var callMessage = command.ArgString;
         _playerMethods.CallAdmin(player, callMessage);
 
-        command.ReplyToCommand("Message sent to Admin.");
+        command.ReplyToCommand(blue.ToColoredChat("Message sent to Admin."));
     }
 
     public void HelpCommand(CCSPlayerController? player, CommandInfo command)
@@ -80,11 +82,11 @@ public class PlayerCommands(PlayerMethods playerMethods, ILogger<PlayerCommands>
             return;
         }
 
-        command.ReplyToCommand($"Available commands:");
-        command.ReplyToCommand("!ready - Mark yourself as ready.\n");
-        command.ReplyToCommand("!unready - Unmark yourself as ready.\n");
-        command.ReplyToCommand("!pause - Pause the game for your team.\n");
-        command.ReplyToCommand("!unpause - Unpause the game for your team.\n");
-        command.ReplyToCommand("!admin <message> - Call an admin with an optional message.");
+        command.ReplyToCommand(green.ToColoredChat("Available commands:"));
+        command.ReplyToCommand(green.ToColoredChat("!ready - Mark yourself as ready.\n"));
+        command.ReplyToCommand(green.ToColoredChat("!unready - Unmark yourself as ready.\n"));
+        command.ReplyToCommand(green.ToColoredChat("!pause - Pause the game for your team.\n"));
+        command.ReplyToCommand(green.ToColoredChat("!unpause - Unpause the game for your team.\n"));
+        command.ReplyToCommand(green.ToColoredChat("!admin <message> - Call an admin with an optional message."));
     }
 }

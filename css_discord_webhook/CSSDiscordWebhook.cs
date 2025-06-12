@@ -1,8 +1,10 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Config;
+using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Utils;
 using css_discord_webhook.Discord;
 using css_discord_webhook.Player;
@@ -170,6 +172,20 @@ public class CSSDiscordWebhook(
                 Logger.LogInformation($" L {playerController.PlayerName} (ID: {playerController.SteamID})");
             }
         }
+    }
+
+    [GameEventHandler]
+    public HookResult OnGameEnd(EventGameEnd roundStart, GameEventInfo info)
+    {
+        if (_discordWebhook == null)
+        {
+            Logger.LogError("Discord webhook is not initialized.");
+            return HookResult.Continue;
+        }
+
+        _discordWebhook.SendMessage($"Game End Event triggered: {roundStart.Winner}");
+
+        return HookResult.Continue;
     }
 
     [GameEventHandler]
