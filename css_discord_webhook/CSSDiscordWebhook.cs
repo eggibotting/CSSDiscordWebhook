@@ -51,10 +51,6 @@ public class CSSDiscordWebhook(
 
         AddCommand("css_unready", "Marks the player as not ready for the game.", _playerCommands.UnreadyCommand);
 
-        AddCommand("css_pause", "Pauses the game for the team.", _playerCommands.PauseCommand);
-
-        AddCommand("css_unpause", "Unpauses the game.", _playerCommands.UnpauseCommand);
-
         AddCommand("css_admin", "Calls an admin through the Discord webhook.", _playerCommands.CallAdminCommand);
 
         AddCommand("css_help", "Prints an overview of all commands to the player.", _playerCommands.HelpCommand);
@@ -75,6 +71,50 @@ public class CSSDiscordWebhook(
         RemoveCommand("css_help", _playerCommands.HelpCommand);
     }
 
+    [ConsoleCommand("set_gamestate", "Sets the current gamestate")]
+    [CommandHelper(minArgs: 1, usage: "[live|warmup]", whoCanExecute: CommandUsage.SERVER_ONLY)]
+    public void SetGameState(CCSPlayerController? player, CommandInfo command)
+    {
+        var gameState = command.GetArg(1).ToLowerInvariant();
+        switch (gameState)
+        {
+            case "live": SetGameStateLive(); return;
+            case "warmup": SetGameStateWarmup(); return;
+            default:
+                Logger.LogError("Invalid game state. Use 'live' or 'warmup'.");
+                return;
+        }
+    }
+
+    private void SetGameStateLive()
+    {
+        // Important: As this is just to set the plugins gamestate, we do not execute any config here.
+        _gameState = GameState.Live;
+
+        RemoveCommand("css_ready", _playerCommands.ReadyCommand);
+        RemoveCommand("css_unready", _playerCommands.UnreadyCommand);
+        AddCommand("css_pause", "Pauses the game for the team.", _playerCommands.PauseCommand);
+        AddCommand("css_unpause", "Unpauses the game.", _playerCommands.UnpauseCommand);
+
+
+        Logger.LogInformation("Game state set to Live.");
+    }
+
+    private void SetGameStateWarmup()
+    {
+        // Important: As this is just to set the plugins gamestate, we do not execute any config here.
+        _gameState = GameState.Warmup;
+        
+        AddCommand("css_ready", "Marks the player as ready for the game.", _playerCommands.ReadyCommand);
+        AddCommand("css_unready", "Marks the player as not ready for the game.", _playerCommands.UnreadyCommand);
+        RemoveCommand("css_pause", _playerCommands.PauseCommand);
+        RemoveCommand("css_unpause", _playerCommands.UnpauseCommand);
+
+        // TODO: Exec GameWarmup Config
+
+        Logger.LogInformation("Game state set to Warmup.");
+    }
+
     [GameEventHandler]
     public HookResult OnMatchStart(EventBeginNewMatch matchStart, GameEventInfo info)
     {
@@ -84,7 +124,7 @@ public class CSSDiscordWebhook(
             return HookResult.Continue;
         }
 
-        _gameState = GameState.Live;
+        SetGameStateLive();
 
         var names = GetTeamNames();
 
@@ -187,11 +227,10 @@ public class CSSDiscordWebhook(
         return HookResult.Continue;
     }
 
-    [ConsoleCommand("test", "")]
+    [ConsoleCommand("gamestate", "Prints the current game state to Chat for debugging.")]
     public void TestCommand(CCSPlayerController? player, CommandInfo command)
     {
-        GetMatchMock();
-        RenameTeams(team1Name: "Team A", team2Name: "Team B");
+        Server.PrintToChatAll("Current Game State: " + _gameState);
     }
 
     private static void RenameTeams(string? team1Name = null, string? team2Name = null)
