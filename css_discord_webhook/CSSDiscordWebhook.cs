@@ -99,22 +99,22 @@ public class CSSDiscordWebhook(
         return HookResult.Continue;
     }
 
-    // [GameEventHandler]
-    // public HookResult OnRoundEnd(EventRoundEnd roundEnd, GameEventInfo info)
-    // {
-    //     if (_discordWebhook == null)
-    //     {
-    //         Logger.LogError("Discord webhook is not initialized.");
-    //         return HookResult.Continue;
-    //     }
+    [GameEventHandler]
+    public HookResult OnRoundEnd(EventRoundEnd roundEnd, GameEventInfo info)
+    {
+        if (_discordWebhook == null)
+        {
+            Logger.LogError("Discord webhook is not initialized.");
+            return HookResult.Continue;
+        }
 
-    //     var match = GetMatchMock();
+        var match = GetMatchMock();
 
-    //     var message = $"Round ended. {match.Team1!.ClanTeamname}: {match.Team1.Score} | {match.Team2!.ClanTeamname}: {match.Team2.Score}";
-    //     _discordWebhook.SendMessage(message);
-    //     Server.PrintToChatAll("Message sent to Discord.");
-    //     return HookResult.Continue;
-    // }
+        var message = $"Round ended. {match.Team1!.ClanTeamname}: {match.Team1.Score} | {match.Team2!.ClanTeamname}: {match.Team2.Score}";
+        _discordWebhook.SendMessage(message);
+        Server.PrintToChatAll("Message sent to Discord.");
+        return HookResult.Continue;
+    }
 
 
     [ConsoleCommand("test", "")]
