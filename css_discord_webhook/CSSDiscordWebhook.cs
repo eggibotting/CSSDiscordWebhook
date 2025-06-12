@@ -103,32 +103,38 @@ public class CSSDiscordWebhook(
         Logger.LogInformation($"Instance Name: {config.InstanceName}");
     }
 
-    [ConsoleCommand("players_team1", "Prints a list with all Players on Team 1.")]
+    [ConsoleCommand("info_team1", "Prints a list with all Players on Team 1 and the current Teamname.")]
     [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
-    public void PrintPlayersTeam1(CCSPlayerController? player, CommandInfo command)
+    public void PrintTeam1(CCSPlayerController? player, CommandInfo command)
     {
         var mock = GetMatchMock();
+
+        var team1Name = string.IsNullOrEmpty(mock.Team1!.ClanTeamname) ? Enum.GetName(typeof(CsTeam), mock.Team1.TeamNum) : mock.Team1!.ClanTeamname;
+        Logger.LogInformation($"Team 1: {team1Name} (Score: {mock.Team1.Score})");
 
         foreach (var playerController in mock.Team1!.PlayerControllers.Select(p => p.Value))
         {
             if (playerController != null)
             {
-                Logger.LogInformation($"{playerController.PlayerName} (ID: {playerController.SteamID})");
+                Logger.LogInformation($" L {playerController.PlayerName} (ID: {playerController.SteamID})");
             }
         }
     }
 
-    [ConsoleCommand("players_team2", "Prints a list with all Players on Team 2.")]
+    [ConsoleCommand("info_team2", "Prints a list with all Players on Team 2 and the current Teamname.")]
     [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
     public void PrintPlayersTeam2(CCSPlayerController? player, CommandInfo command)
     {
         var mock = GetMatchMock();
 
+        var team2Name = string.IsNullOrEmpty(mock.Team2!.ClanTeamname) ? Enum.GetName(typeof(CsTeam), mock.Team2.TeamNum) : mock.Team2!.ClanTeamname;
+        Logger.LogInformation($"Team 1: {team2Name} (Score: {mock.Team2.Score})");
+
         foreach (var playerController in mock.Team2!.PlayerControllers.Select(p => p.Value))
         {
             if (playerController != null)
             {
-                Logger.LogInformation($"{playerController.PlayerName} (ID: {playerController.SteamID})");
+                Logger.LogInformation($" L {playerController.PlayerName} (ID: {playerController.SteamID})");
             }
         }
     }
