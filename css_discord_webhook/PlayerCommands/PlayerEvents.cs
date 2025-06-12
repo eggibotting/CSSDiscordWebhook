@@ -37,7 +37,7 @@ public class PlayerEvents(PlayerMethods playerMethods)
 
     /// <summary>
     /// Triggers, when a match is starting (only after warmups, also after <c>mp_restartgame 1</c>)
-    /// </summary>
+    /// </summary> //TODO: Does this work for <c>mp_restartgame 1</c>?
     [GameEventHandler]
     public HookResult OnGameRestart(EventBeginNewMatch roundStart, GameEventInfo info)
     {
@@ -48,7 +48,7 @@ public class PlayerEvents(PlayerMethods playerMethods)
     }
 
     /// <summary>
-    /// Triggers, when warmup naturally ends (not after <c>mp_warmup_end</c>)
+    /// Triggers, when warmup naturally ends (but not after <c>mp_warmup_end</c>)
     /// </summary>
     [GameEventHandler]
     public HookResult OnWarmupEnd(EventWarmupEnd warmupEnd, GameEventInfo info)
@@ -60,7 +60,7 @@ public class PlayerEvents(PlayerMethods playerMethods)
     }
 
     /// <summary>
-    /// Triggers, when warmup starts (not after <c>mp_warmup_start</c>)
+    /// Triggers, when warmup starts (but not after <c>mp_warmup_start</c>)
     /// </summary>
     [GameEventHandler]
     public HookResult OnWarmupStart(EventRoundAnnounceWarmup warmupEnd, GameEventInfo info)

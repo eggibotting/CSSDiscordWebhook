@@ -76,6 +76,64 @@ public class CSSDiscordWebhook(
     }
 
     [GameEventHandler]
+    public HookResult OnMatchStart(EventBeginNewMatch matchStart, GameEventInfo info)
+    {
+        if (_discordWebhook == null)
+        {
+            Logger.LogError("Discord webhook is not initialized.");
+            return HookResult.Continue;
+        }
+
+        _gameState = GameState.Live;
+
+        var names = GetTeamNames();
+
+        _discordWebhook.SendMessage($"Match started on map {Server.MapName} with teams: {names.Item1} vs {names.Item2}");
+        return HookResult.Continue;
+    }
+
+    [ConsoleCommand("reload_webhook", "Reloads the Discord webhook configuration.")]
+    [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+    public void ReloadWebhook(CCSPlayerController? player, CommandInfo command)
+    {
+        var config = ConfigManager.Load<DiscordConfig>("CSSDiscordWebhook");
+        _discordWebhook.OnConfigParsed(config);
+        Logger.LogInformation("Discord webhook configuration reloaded.");
+        Logger.LogInformation($"Discord Webhook URL: {config.WebhookUrl}");
+        Logger.LogInformation($"Instance Name: {config.InstanceName}");
+    }
+
+    [ConsoleCommand("players_team1", "Prints a list with all Players on Team 1.")]
+    [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+    public void PrintPlayersTeam1(CCSPlayerController? player, CommandInfo command)
+    {
+        var mock = GetMatchMock();
+
+        foreach (var playerController in mock.Team1!.PlayerControllers.Select(p => p.Value))
+        {
+            if (playerController != null)
+            {
+                Logger.LogInformation($"{playerController.PlayerName} (ID: {playerController.SteamID})");
+            }
+        }
+    }
+
+    [ConsoleCommand("players_team2", "Prints a list with all Players on Team 2.")]
+    [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+    public void PrintPlayersTeam2(CCSPlayerController? player, CommandInfo command)
+    {
+        var mock = GetMatchMock();
+
+        foreach (var playerController in mock.Team2!.PlayerControllers.Select(p => p.Value))
+        {
+            if (playerController != null)
+            {
+                Logger.LogInformation($"{playerController.PlayerName} (ID: {playerController.SteamID})");
+            }
+        }
+    }
+
+    [GameEventHandler]
     public HookResult OnRoundEnd(EventRoundEnd roundEnd, GameEventInfo info)
     {
         if (_discordWebhook == null)
@@ -85,10 +143,41 @@ public class CSSDiscordWebhook(
         }
 
         var match = GetMatchMock();
-
-        var message = $"Round ended. {match.Team1!.ClanTeamname}: {match.Team1.Score} | {match.Team2!.ClanTeamname}: {match.Team2.Score}";
-        _discordWebhook.SendMessage(message);
-        Server.PrintToChatAll("Message sent to Discord.");
+        var names = GetTeamNames(match);
+        if (match.Team1!.Score < 13 && match.Team2!.Score < 13)
+        {
+            // Match ongoing
+        }
+        else if (match.Team1.Score == 13 && match.Team2!.Score < 13)
+        {
+            // Team 1 wins
+            var message = $"Team {names.Item1} won the Game: [{match.Team1.Score}:{match.Team2.Score}] against Team {names.Item2}";
+            _discordWebhook.SendMessage(message);
+        }
+        else if (match.Team2!.Score == 13 && match.Team1.Score < 13)
+        {
+            // Team 2 wins
+            var message = $"Team {names.Item2} won the Game: [{match.Team2.Score}:{match.Team1.Score}] against Team {names.Item1}";
+            _discordWebhook.SendMessage(message);
+        }
+        else if (match.Team1.Score == 16 && match.Team2.Score < 15)
+        {
+            // Team 1 wins in Overtime
+            var message = $"Team {names.Item1} won the Game: [{match.Team1.Score}:{match.Team2.Score}] against Team {names.Item2}";
+            _discordWebhook.SendMessage(message);
+        }
+        else if (match.Team2.Score == 16 && match.Team1.Score < 15)
+        {
+            // Team 2 wins in Overtime
+            var message = $"Team {names.Item2} won the Game: [{match.Team2.Score}:{match.Team1.Score}] against Team {names.Item1}";
+            _discordWebhook.SendMessage(message);
+        }
+        else if (match.Team1.Score == 15 || match.Team2.Score == 15)
+        {
+            // Draw
+            var message = $"The Game ended in a draw: {names.Item1} [{match.Team1.Score}:{match.Team2.Score}] {names.Item2}";
+            _discordWebhook.SendMessage(message);
+        }
         return HookResult.Continue;
     }
 
@@ -140,5 +229,15 @@ public class CSSDiscordWebhook(
     public void AddTimer(float interval, Action callback)
     {
         base.AddTimer(interval, callback);
+    }
+
+    private Tuple<string, string> GetTeamNames(MatchMock? providedMock = null)
+    {
+        var mock = providedMock ?? GetMatchMock();
+
+        var team1Name = string.IsNullOrEmpty(mock.Team1!.ClanTeamname) ? Enum.GetName(typeof(CsTeam), mock.Team1.TeamNum) : mock.Team1!.ClanTeamname;
+        var team2Name = string.IsNullOrEmpty(mock.Team2!.ClanTeamname) ? Enum.GetName(typeof(CsTeam), mock.Team2.TeamNum) : mock.Team2!.ClanTeamname;
+
+        return new Tuple<string, string>(team1Name!, team2Name!);
     }
 }
