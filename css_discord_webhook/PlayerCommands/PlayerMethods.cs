@@ -1,4 +1,6 @@
 using CounterStrikeSharp.API;
+using static CounterStrikeSharp.API.Utilities;
+using CounterStrikeSharp.API.Modules.Extensions;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using css_discord_webhook.Discord;
@@ -24,7 +26,7 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
 
         var team = player.Team;
 
-        if (!playerReadyStatus.TryGetValue(team, out HashSet<CCSPlayerController>? set)) return;
+        if (!playerReadyStatus.TryGetValue(team, out var set)) return;
 
         if (set.Add(player))
         {
@@ -49,7 +51,10 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
 
         pausedTeam = team;
 
-        Server.PrintToChatAll($"Game paused for team: {team}. Use !unpause to resume.");
+        var mock = GetMatchMock();
+        var teamName = mock.Team1?.TeamNum == (int)team ? mock.Team1.ClanTeamname : mock.Team2?.ClanTeamname;
+
+        Server.PrintToChatAll($"Game paused for team: {(string.IsNullOrWhiteSpace(teamName) ? team : teamName)}. Use !unpause to resume.");
 
         Server.ExecuteCommand("mp_pause_match");
     }
@@ -60,9 +65,10 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
 
         pausedTeam = null;
 
-        Server.PrintToChatAll("Game unpaused. Coninuing match...");
+        Server.PrintToChatAll("Game unpaused. Continuing match...");
 
         Server.ExecuteCommand("mp_unpause_match");
+
     }
 
     public void CallAdmin(CCSPlayerController player, string message)
@@ -115,5 +121,32 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
     {
         playerReadyStatus[CsTeam.Terrorist] = [];
         playerReadyStatus[CsTeam.CounterTerrorist] = [];
+    }
+
+
+    private MatchMock GetMatchMock()
+    {
+        MatchMock mock = new()
+        {
+            MapName = Server.MapName,
+            GameState = GameState
+        };
+
+        foreach (var entity in GetAllEntities())
+        {
+            if (entity.DesignerName == "cs_team_manager")
+            {
+                var team = GetEntityFromIndex<CCSTeam>((int)entity.Index);
+                if (team!.TeamNum == (int)CsTeam.Terrorist)
+                {
+                    mock.Team1 = team;
+                }
+                else if (team.TeamNum == (int)CsTeam.CounterTerrorist)
+                {
+                    mock.Team2 = team;
+                }
+            }
+        }
+        return mock;
     }
 }
