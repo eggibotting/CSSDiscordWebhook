@@ -35,7 +35,6 @@ public class CSSDiscordWebhook(
     private readonly DiscordWebhook _discordWebhook = discordWebhook;
     private readonly PlayerMethods _playerMethods = playerMethods;
     private readonly PlayerCommands _playerCommands = playerCommands;
-    private GameState _gameState = GameState.Warmup;
 
     public override void Load(bool hotReload)
     {
@@ -89,8 +88,6 @@ public class CSSDiscordWebhook(
     private void SetGameStateLive()
     {
         // Important: As this is just to set the plugins gamestate, we do not execute any config here.
-        _gameState = GameState.Live;
-
         RemoveCommand("css_ready", _playerCommands.ReadyCommand);
         RemoveCommand("css_unready", _playerCommands.UnreadyCommand);
         AddCommand("css_pause", "Pauses the game for the team.", _playerCommands.PauseCommand);
@@ -103,14 +100,10 @@ public class CSSDiscordWebhook(
     private void SetGameStateWarmup()
     {
         // Important: As this is just to set the plugins gamestate, we do not execute any config here.
-        _gameState = GameState.Warmup;
-        
         AddCommand("css_ready", "Marks the player as ready for the game.", _playerCommands.ReadyCommand);
         AddCommand("css_unready", "Marks the player as not ready for the game.", _playerCommands.UnreadyCommand);
         RemoveCommand("css_pause", _playerCommands.PauseCommand);
         RemoveCommand("css_unpause", _playerCommands.UnpauseCommand);
-
-        // TODO: Exec GameWarmup Config
 
         Logger.LogInformation("Game state set to Warmup.");
     }
@@ -227,12 +220,6 @@ public class CSSDiscordWebhook(
         return HookResult.Continue;
     }
 
-    [ConsoleCommand("gamestate", "Prints the current game state to Chat for debugging.")]
-    public void TestCommand(CCSPlayerController? player, CommandInfo command)
-    {
-        Server.PrintToChatAll("Current Game State: " + _gameState);
-    }
-
     private static void RenameTeams(string? team1Name = null, string? team2Name = null)
     {
         if (!string.IsNullOrWhiteSpace(team1Name)) Server.ExecuteCommand($"mp_teamname_1 {team1Name}");
@@ -244,7 +231,6 @@ public class CSSDiscordWebhook(
         MatchMock mock = new()
         {
             MapName = Server.MapName,
-            GameState = _gameState
         };
 
         foreach (var entity in GetAllEntities())
