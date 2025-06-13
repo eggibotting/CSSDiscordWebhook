@@ -126,9 +126,9 @@ public class CSSDiscordWebhook(
 
     private void PrintWarmupHelp()
     {
-        if (_gameState != GameState.Warmup) return;
         base.AddTimer(15, () =>
         {
+            if (_gameState != GameState.Warmup) return;
             Server.PrintToChatAll("Not all players are ready. Use !ready to mark yourself as ready. Use !help for a list of commands.");
             PrintWarmupHelp();
         });
