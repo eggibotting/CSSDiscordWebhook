@@ -41,6 +41,7 @@ public class CSSDiscordWebhook(
     private readonly PlayerMethods _playerMethods = playerMethods;
     private readonly PlayerCommands _playerCommands = playerCommands;
     private GameState _gameState = GameState.Warmup;
+    private bool warmupHelp = false;
 
     public override void Load(bool hotReload)
     {
@@ -57,7 +58,7 @@ public class CSSDiscordWebhook(
 
         RegisterListener<Listeners.OnMapStart>(map =>
         {
-            SetGameStateWarmup(true);
+            SetGameStateWarmup();
         });
     }
 
@@ -78,33 +79,40 @@ public class CSSDiscordWebhook(
         var gameState = command.GetArg(1).ToLowerInvariant();
         switch (gameState)
         {
-            case "live": SetGameStateLive(true); return;
-            case "warmup": SetGameStateWarmup(true); return;
+            case "live": SetGameStateLive(); return;
+            case "warmup": SetGameStateWarmup(); return;
             default:
                 Logger.LogError("Invalid game state. Use 'live' or 'warmup'.");
                 return;
         }
     }
 
-    private void SetGameStateLive(bool hotReload)
+    [GameEventHandler]
+    public HookResult OnFirstPlayerSpawned(EventPlayerConnectFull connect, GameEventInfo info)
+    {
+        if (_gameState == GameState.Warmup)
+        {
+            SetGameStateWarmup();            
+        }
+        return HookResult.Continue;
+    }
+
+    private void SetGameStateLive()
     {
         RemoveCommand("css_ready", _playerCommands.ReadyCommand);
         RemoveCommand("css_unready", _playerCommands.UnreadyCommand);
         AddCommand("css_pause", "Pauses the game for the team.", _playerCommands.PauseCommand);
         AddCommand("css_unpause", "Unpauses the game.", _playerCommands.UnpauseCommand);
 
-        if (hotReload)
-        {
-            // TODO: Load the GameLive Config
-            // Server.ExecuteCommand("exec gamelive.cfg");
-        }
+        Server.ExecuteCommand("exec gamestart.cfg");
 
         _gameState = GameState.Live;
+        warmupHelp = false;
 
         Logger.LogInformation("Game state set to Live.");
     }
 
-    private void SetGameStateWarmup(bool hotReload)
+    private void SetGameStateWarmup()
     {
         // Important: As this is just to set the plugins gamestate, we do not execute any config here.
         AddCommand("css_ready", "Marks the player as ready for the game.", _playerCommands.ReadyCommand);
@@ -112,17 +120,18 @@ public class CSSDiscordWebhook(
         RemoveCommand("css_pause", _playerCommands.PauseCommand);
         RemoveCommand("css_unpause", _playerCommands.UnpauseCommand);
 
-        if (hotReload)
-        {
-            // TODO: Load the Warmup Config
-            // Server.ExecuteCommand("exec warmup.cfg");
-        }
+        Server.ExecuteCommand("exec warmup.cfg");
 
         _gameState = GameState.Warmup;
 
         Logger.LogInformation("Game state set to Warmup.");
 
-        PrintWarmupHelp();
+
+        if (!warmupHelp)
+        {
+            warmupHelp = true;
+            PrintWarmupHelp();
+        }
     }
 
     private void PrintWarmupHelp()
@@ -138,7 +147,7 @@ public class CSSDiscordWebhook(
     [GameEventHandler]
     public HookResult OnMatchStart(EventBeginNewMatch matchStart, GameEventInfo info)
     {
-        SetGameStateLive(false);
+        SetGameStateLive();
 
         if (_discordWebhook == null)
         {
