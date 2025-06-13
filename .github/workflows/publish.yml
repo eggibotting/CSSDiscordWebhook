@@ -36,7 +36,7 @@ jobs:
               run: dotnet build --configuration Release
 
             - name: List build output
-              run: ls -R ./bin/Release
+              run: ls -R /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/bin/Release/net8.0
 
 
             - name: Pack output folder
