@@ -35,6 +35,10 @@ jobs:
             - name: Build project
               run: dotnet build --configuration Release
 
+            - name: List build output
+              run: ls -R ./bin/Release
+
+
             - name: Pack output folder
               run: |
                   mkdir -p export/${{ env.dllName }}
