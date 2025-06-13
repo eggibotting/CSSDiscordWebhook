@@ -15,7 +15,7 @@ jobs:
     build:
         env:
             dllName: CSSDiscordWebhook
-            releasePath: /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/CSSDiscordWebhook/bin/Release/net8.0
+            releasePath: /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/bin/Release/net8.0
             RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
         runs-on: ubuntu-latest
         permissions:
