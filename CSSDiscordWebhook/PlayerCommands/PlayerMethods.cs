@@ -89,8 +89,8 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
 
     private bool AllPlayersReady()
     {
-        return playerReadyStatus[CsTeam.Terrorist].Count == 1;
-        //return GetPlayers().Count == 10 && playerReadyStatus.All(kvp => kvp.Value.Count == 5);
+        // return playerReadyStatus[CsTeam.Terrorist].Count == 1;
+        return GetPlayers().Count == 10 && playerReadyStatus.All(kvp => kvp.Value.Count == 5);
     }
 
     private void StartGame()

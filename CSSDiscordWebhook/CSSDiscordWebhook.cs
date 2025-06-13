@@ -11,6 +11,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using CSSDiscordWebhook.Discord;
 using CSSDiscordWebhook.Player;
 using CSSDiscordWebhook.Util;
+using static CSSDiscordWebhook.Util.ChatColors;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using static CounterStrikeSharp.API.Utilities;
@@ -129,7 +130,7 @@ public class CSSDiscordWebhook(
         base.AddTimer(15, () =>
         {
             if (_gameState != GameState.Warmup) return;
-            Server.PrintToChatAll("Not all players are ready. Use !ready to mark yourself as ready. Use !help for a list of commands.");
+            Server.PrintToChatAll(blue.ToColoredChat("[Warmup]") + white.ToColoredChat(" Use !ready to mark yourself as ready. Use !help for a list of commands."));
             PrintWarmupHelp();
         });
     }
