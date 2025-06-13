@@ -90,7 +90,7 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
     private bool AllPlayersReady()
     {
         // return playerReadyStatus[CsTeam.Terrorist].Count == 1;
-        return GetPlayers().Count == 10 && playerReadyStatus.All(kvp => kvp.Value.Count == 5);
+        return playerReadyStatus.All(kvp => kvp.Value.Count == 5);
     }
 
     private void StartGame()
@@ -100,15 +100,14 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
 
     private void Countdown(int secondsRemaining, Action callback)
     {
+        if (!AllPlayersReady()) return;
         if (secondsRemaining > 0)
         {
-            if (!AllPlayersReady()) return;
             Server.PrintToChatAll($"Game starts in {secondsRemaining}...");
             Timer!.AddTimer(1, () => Countdown(secondsRemaining - 1, callback));
         }
         else
         {
-            if (!AllPlayersReady()) return;
             callback.Invoke();
         }
     }
