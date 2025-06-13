@@ -3,13 +3,13 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
-using css_discord_webhook.Discord;
-using css_discord_webhook.Util;
+using CSSDiscordWebhook.Discord;
+using CSSDiscordWebhook.Util;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using static css_discord_webhook.Util.ChatColors;
+using static CSSDiscordWebhook.Util.ChatColors;
 
-namespace css_discord_webhook.Player;
+namespace CSSDiscordWebhook.Player;
 
 public class PlayerCommands(PlayerMethods playerMethods, ILogger<PlayerCommands> logger)
 {

@@ -1,4 +1,4 @@
-namespace css_discord_webhook.Util;
+namespace CSSDiscordWebhook.Util;
 
 public enum ChatColors
 {

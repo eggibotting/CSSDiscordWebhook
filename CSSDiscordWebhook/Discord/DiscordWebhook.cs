@@ -4,7 +4,7 @@ using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace css_discord_webhook.Discord;
+namespace CSSDiscordWebhook.Discord;
 
 public class DiscordWebhook(ILogger<DiscordWebhook> logger) : IPluginConfig<DiscordConfig>
 {

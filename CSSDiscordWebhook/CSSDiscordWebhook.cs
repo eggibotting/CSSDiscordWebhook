@@ -8,14 +8,14 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using css_discord_webhook.Discord;
-using css_discord_webhook.Player;
-using css_discord_webhook.Util;
+using CSSDiscordWebhook.Discord;
+using CSSDiscordWebhook.Player;
+using CSSDiscordWebhook.Util;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using static CounterStrikeSharp.API.Utilities;
 
-namespace css_discord_webhook;
+namespace CSSDiscordWebhook;
 
 public class WebhookServiceCollection : IPluginServiceCollection<CSSDiscordWebhook>
 {

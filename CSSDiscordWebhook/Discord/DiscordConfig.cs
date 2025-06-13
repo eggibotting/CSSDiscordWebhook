@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using CounterStrikeSharp.API.Core;
 
-namespace css_discord_webhook.Discord;
+namespace CSSDiscordWebhook.Discord;
 
 public class DiscordConfig : BasePluginConfig
 {

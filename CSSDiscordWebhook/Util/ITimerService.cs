@@ -1,6 +1,6 @@
 using System;
 
-namespace css_discord_webhook.Util;
+namespace CSSDiscordWebhook.Util;
 
 public interface ITimerService
 {

@@ -3,11 +3,11 @@ using static CounterStrikeSharp.API.Utilities;
 using CounterStrikeSharp.API.Modules.Extensions;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
-using css_discord_webhook.Discord;
-using css_discord_webhook.Util;
-using static css_discord_webhook.Util.ChatColors;
+using CSSDiscordWebhook.Discord;
+using CSSDiscordWebhook.Util;
+using static CSSDiscordWebhook.Util.ChatColors;
 
-namespace css_discord_webhook.Player;
+namespace CSSDiscordWebhook.Player;
 
 public class PlayerMethods(DiscordWebhook discordWebhook)
 {

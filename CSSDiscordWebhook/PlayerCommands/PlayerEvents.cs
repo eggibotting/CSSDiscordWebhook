@@ -1,10 +1,10 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
-using css_discord_webhook.Util;
+using CSSDiscordWebhook.Util;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace css_discord_webhook.Player;
+namespace CSSDiscordWebhook.Player;
 
 public class PlayerEvents(PlayerMethods playerMethods)
 {

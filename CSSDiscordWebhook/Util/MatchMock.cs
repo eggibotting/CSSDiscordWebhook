@@ -1,7 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 
-namespace css_discord_webhook.Util;
+namespace CSSDiscordWebhook.Util;
 
 class MatchMock
 {
