@@ -111,10 +111,7 @@ public class CSSDiscordWebhook(
         RemoveCommand("css_pause", _playerCommands.PauseCommand);
         RemoveCommand("css_unpause", _playerCommands.UnpauseCommand);
 
-        if (hotReload)
-        {
-            Server.ExecuteCommand("exec warmup.cfg");
-        }
+        Server.ExecuteCommand("exec warmup.cfg");
 
         _gameState = GameState.Warmup;
 
