@@ -1,0 +1,52 @@
+name: Build and Release
+
+on:
+    push:
+        tags:
+            - "v*"
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: "Release tag (e.g. v1.0.0)"
+                required: true
+                type: string
+
+jobs:
+    build:
+        env:
+            dllName: CSSDiscordWebhook
+            releasePath: /home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/CSSDiscordWebhook/bin/Release/net8.0
+            RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Set up .NET
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: "8.0.x"
+
+            - name: Restore dependencies
+              run: dotnet restore
+
+            - name: Build project
+              run: dotnet build --configuration Release
+
+            - name: Pack output folder
+              run: |
+                  mkdir -p export/${{ env.dllName }}
+                  cd export
+                  cp ${{ env.releasePath }}/${{ env.dllName }}.dll ./${{ env.dllName }}
+                  zip -r ${{ env.dllName }}.zip ./${{ env.dllName }}
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  name: Release ${{ env.RELEASE_TAG }}
+                  tag_name: ${{ env.RELEASE_TAG }}
+                  files: export/${{ env.dllName }}.zip
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
