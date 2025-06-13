@@ -95,8 +95,7 @@ public class CSSDiscordWebhook(
 
         if (hotReload)
         {
-            // TODO: Load the GameLive Config
-            // Server.ExecuteCommand("exec gamelive.cfg");
+            Server.ExecuteCommand("exec gamestart.cfg");
         }
 
         _gameState = GameState.Live;
@@ -114,8 +113,7 @@ public class CSSDiscordWebhook(
 
         if (hotReload)
         {
-            // TODO: Load the Warmup Config
-            // Server.ExecuteCommand("exec warmup.cfg");
+            Server.ExecuteCommand("exec warmup.cfg");
         }
 
         _gameState = GameState.Warmup;
