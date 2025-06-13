@@ -4,7 +4,9 @@ using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Config;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Events;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using css_discord_webhook.Discord;
 using css_discord_webhook.Player;
@@ -37,6 +39,7 @@ public class CSSDiscordWebhook(
     private readonly DiscordWebhook _discordWebhook = discordWebhook;
     private readonly PlayerMethods _playerMethods = playerMethods;
     private readonly PlayerCommands _playerCommands = playerCommands;
+    private GameState _gameState = GameState.Warmup;
 
     public override void Load(bool hotReload)
     {
@@ -48,27 +51,22 @@ public class CSSDiscordWebhook(
 
         _discordWebhook.OnConfigParsed(config);
 
-        AddCommand("css_ready", "Marks the player as ready for the game.", _playerCommands.ReadyCommand);
-
-        AddCommand("css_unready", "Marks the player as not ready for the game.", _playerCommands.UnreadyCommand);
-
         AddCommand("css_admin", "Calls an admin through the Discord webhook.", _playerCommands.CallAdminCommand);
-
         AddCommand("css_help", "Prints an overview of all commands to the player.", _playerCommands.HelpCommand);
+
+        RegisterListener<Listeners.OnMapStart>(map =>
+        {
+            SetGameStateWarmup(true);
+        });
     }
 
     public override void Unload(bool hotReload) // maybe optional
     {
         RemoveCommand("css_ready", _playerCommands.ReadyCommand);
-
         RemoveCommand("css_unready", _playerCommands.UnreadyCommand);
-
         RemoveCommand("css_pause", _playerCommands.PauseCommand);
-
         RemoveCommand("css_unpause", _playerCommands.UnpauseCommand);
-
         RemoveCommand("css_admin", _playerCommands.CallAdminCommand);
-
         RemoveCommand("css_help", _playerCommands.HelpCommand);
     }
 
@@ -79,27 +77,33 @@ public class CSSDiscordWebhook(
         var gameState = command.GetArg(1).ToLowerInvariant();
         switch (gameState)
         {
-            case "live": SetGameStateLive(); return;
-            case "warmup": SetGameStateWarmup(); return;
+            case "live": SetGameStateLive(true); return;
+            case "warmup": SetGameStateWarmup(true); return;
             default:
                 Logger.LogError("Invalid game state. Use 'live' or 'warmup'.");
                 return;
         }
     }
 
-    private void SetGameStateLive()
+    private void SetGameStateLive(bool hotReload)
     {
-        // Important: As this is just to set the plugins gamestate, we do not execute any config here.
         RemoveCommand("css_ready", _playerCommands.ReadyCommand);
         RemoveCommand("css_unready", _playerCommands.UnreadyCommand);
         AddCommand("css_pause", "Pauses the game for the team.", _playerCommands.PauseCommand);
         AddCommand("css_unpause", "Unpauses the game.", _playerCommands.UnpauseCommand);
 
+        if (hotReload)
+        {
+            // TODO: Load the GameLive Config
+            // Server.ExecuteCommand("exec gamelive.cfg");
+        }
+
+        _gameState = GameState.Live;
 
         Logger.LogInformation("Game state set to Live.");
     }
 
-    private void SetGameStateWarmup()
+    private void SetGameStateWarmup(bool hotReload)
     {
         // Important: As this is just to set the plugins gamestate, we do not execute any config here.
         AddCommand("css_ready", "Marks the player as ready for the game.", _playerCommands.ReadyCommand);
@@ -107,24 +111,55 @@ public class CSSDiscordWebhook(
         RemoveCommand("css_pause", _playerCommands.PauseCommand);
         RemoveCommand("css_unpause", _playerCommands.UnpauseCommand);
 
+        if (hotReload)
+        {
+            // TODO: Load the Warmup Config
+            // Server.ExecuteCommand("exec warmup.cfg");
+        }
+
+        _gameState = GameState.Warmup;
+
         Logger.LogInformation("Game state set to Warmup.");
+
+        PrintWarmupHelp();
+    }
+
+    private void PrintWarmupHelp()
+    {
+        if (_gameState != GameState.Warmup) return;
+        base.AddTimer(15, () =>
+        {
+            Server.PrintToChatAll("Not all players are ready. Use !ready to mark yourself as ready. Use !help for a list of commands.");
+            PrintWarmupHelp();
+        });
     }
 
     [GameEventHandler]
     public HookResult OnMatchStart(EventBeginNewMatch matchStart, GameEventInfo info)
     {
+        SetGameStateLive(false);
+
         if (_discordWebhook == null)
         {
             Logger.LogError("Discord webhook is not initialized.");
             return HookResult.Continue;
         }
 
-        SetGameStateLive();
-
         var names = GetTeamNames();
 
-        _discordWebhook.SendMessage($"Match started on map {Server.MapName} with teams: {names.Item1} vs {names.Item2}");
+        _discordWebhook.SendMessage($"Match started on map {Server.MapName} with teams: {names.Item1} vs {names.Item2}", 0xFFFFFF);
         return HookResult.Continue;
+    }
+
+    [ConsoleCommand("teamnames", "Sets the team names for Team 1 and Team 2.")]
+    [CommandHelper(minArgs: 2, usage: "<team1name> <team2name>", whoCanExecute: CommandUsage.SERVER_ONLY)]
+    public void SetTeamNames(CCSPlayerController? player, CommandInfo command)
+    {
+        var team1Name = command.GetArg(1);
+        var team2Name = command.GetArg(2);
+
+        RenameTeams(team1Name, team2Name);
+        Logger.LogInformation($"Team names set: {team1Name} : {team2Name}");
     }
 
     [ConsoleCommand("reload_webhook", "Reloads the Discord webhook configuration.")]
@@ -174,18 +209,18 @@ public class CSSDiscordWebhook(
         }
     }
 
-    [GameEventHandler]
-    public HookResult OnGameEnd(EventGameEnd roundStart, GameEventInfo info)
+    /// <summary>
+    /// Method for testing when Game Events trigger.
+    /// </summary>
+    private void SendTestMessage(string eventName)
     {
         if (_discordWebhook == null)
         {
             Logger.LogError("Discord webhook is not initialized.");
-            return HookResult.Continue;
+            return;
         }
 
-        _discordWebhook.SendMessage($"Game End Event triggered: {roundStart.Winner}");
-
-        return HookResult.Continue;
+        _discordWebhook.SendMessage($"Event {eventName} triggered.", 0xFFFFFF);
     }
 
     [GameEventHandler]
@@ -207,31 +242,31 @@ public class CSSDiscordWebhook(
         {
             // Team 1 wins
             var message = $"Team {names.Item1} won the Game: [{match.Team1.Score}:{match.Team2.Score}] against Team {names.Item2}";
-            _discordWebhook.SendMessage(message);
+            _discordWebhook.SendMessage(message, 0x00FF00);
         }
         else if (match.Team2!.Score == 13 && match.Team1.Score < 13)
         {
             // Team 2 wins
             var message = $"Team {names.Item2} won the Game: [{match.Team2.Score}:{match.Team1.Score}] against Team {names.Item1}";
-            _discordWebhook.SendMessage(message);
+            _discordWebhook.SendMessage(message, 0x00FF00);
         }
         else if (match.Team1.Score == 16 && match.Team2.Score < 15)
         {
             // Team 1 wins in Overtime
             var message = $"Team {names.Item1} won the Game: [{match.Team1.Score}:{match.Team2.Score}] against Team {names.Item2}";
-            _discordWebhook.SendMessage(message);
+            _discordWebhook.SendMessage(message, 0x00FF00);
         }
         else if (match.Team2.Score == 16 && match.Team1.Score < 15)
         {
             // Team 2 wins in Overtime
             var message = $"Team {names.Item2} won the Game: [{match.Team2.Score}:{match.Team1.Score}] against Team {names.Item1}";
-            _discordWebhook.SendMessage(message);
+            _discordWebhook.SendMessage(message, 0x00FF00);
         }
         else if (match.Team1.Score == 15 || match.Team2.Score == 15)
         {
             // Draw
             var message = $"The Game ended in a draw: {names.Item1} [{match.Team1.Score}:{match.Team2.Score}] {names.Item2}";
-            _discordWebhook.SendMessage(message);
+            _discordWebhook.SendMessage(message, 0x00FF00);
         }
         return HookResult.Continue;
     }
