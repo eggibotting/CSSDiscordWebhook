@@ -117,7 +117,7 @@ public class PlayerMethods(DiscordWebhook discordWebhook)
     {
         GameState = GameState.Live;
         Server.PrintToChatAll(green.ToColoredChat("GameLive - GL HF!!!"));
-        Server.ExecuteCommand("exec gamestart.cfg");
+        Server.ExecuteCommand("mp_warmup_end");
     }
 
     internal void ResetReadyStatus()

@@ -41,6 +41,7 @@ public class CSSDiscordWebhook(
     private readonly PlayerMethods _playerMethods = playerMethods;
     private readonly PlayerCommands _playerCommands = playerCommands;
     private GameState _gameState = GameState.Warmup;
+    private bool warmupHelp = false;
 
     public override void Load(bool hotReload)
     {
@@ -86,6 +87,16 @@ public class CSSDiscordWebhook(
         }
     }
 
+    [GameEventHandler]
+    public HookResult OnFirstPlayerSpawned(EventPlayerConnectFull connect, GameEventInfo info)
+    {
+        if (_gameState == GameState.Warmup)
+        {
+            SetGameStateWarmup();            
+        }
+        return HookResult.Continue;
+    }
+
     private void SetGameStateLive()
     {
         RemoveCommand("css_ready", _playerCommands.ReadyCommand);
@@ -96,6 +107,7 @@ public class CSSDiscordWebhook(
         Server.ExecuteCommand("exec gamestart.cfg");
 
         _gameState = GameState.Live;
+        warmupHelp = false;
 
         Logger.LogInformation("Game state set to Live.");
     }
@@ -114,7 +126,12 @@ public class CSSDiscordWebhook(
 
         Logger.LogInformation("Game state set to Warmup.");
 
-        PrintWarmupHelp();
+
+        if (!warmupHelp)
+        {
+            warmupHelp = true;
+            PrintWarmupHelp();
+        }
     }
 
     private void PrintWarmupHelp()
